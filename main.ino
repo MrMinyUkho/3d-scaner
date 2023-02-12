@@ -12,7 +12,7 @@
 #include <SPI.h>
 
 #include "MPU6050_6Axis_MotionApps20.h"  // Гироскоп и
-// акселерометр
+                                         // акселерометр
 
 #include <MechaQMC5883.h>  // Магнетометр
 
@@ -59,7 +59,7 @@ EncButton<EB_TICK, ENC_SCK, ENC_DT, ENC_SW> enc;
 
 //--------Переменные---------------
 
-uint8_t MCoord[6][2] = {
+uint8_t MCoord[6][2] = { // Координаты пунктов меню
   { 10, 26 },
   { 10, 74 },
   { 58, 26 },
@@ -112,28 +112,25 @@ kalman fl_X;
 kalman fl_Y;
 kalman fl_Z;
 
+//--------Прерывание-готовности-MPU6050-----
+
 void IRAM_ATTR dmpReady() {
   mpuFlag = true;
 }
 
 void setup() {
 
-  pinMode(ENC_DT, INPUT_PULLUP);
+  pinMode(ENC_DT, INPUT_PULLUP);    // Настройка пинов энкодера
   pinMode(ENC_SW, INPUT_PULLUP);
   pinMode(ENC_SCK, INPUT_PULLUP);
 
-  enc.setEncType(EB_HALFSTEP);
+  enc.setEncType(EB_HALFSTEP);      // Тип энкодера
 
   tft_disp.initR(INITR_BLACKTAB);                    // инициализация
-  tft_disp.setRotation(tft_disp.getRotation() + 3);  // крутим дисп
-  tft_disp.fillScreen(ST7735_BLACK);                 // чисти чисти
+  tft_disp.setRotation(tft_disp.getRotation() + 3);  // крутим дисплей
+  tft_disp.fillScreen(ST7735_BLACK);                 // очистка
 
-  for (int i = 0; i < 128; ++i) {
-    for (int j = 0; j < 160; ++j) {
-      uint16_t px = pgm_read_word(&Logo[i * 160 + j]);
-      if (px != 0) tft_disp.drawPixel(j, i, px);
-    }
-  }
+  drawFromProgMem(&Logo);
 
   tft_disp.drawRect(27, 27, 10, 10, 0x7BCF);
   tft_disp.drawRect(27, 42, 10, 10, 0x7BCF);
@@ -160,7 +157,7 @@ void setup() {
   Serial.begin(115200 * 2);
   Serial.println("z x y");
 
-  drawFromProgMem()
+  drawFromProgMem(&MainMenu);
 }
 
 void loop() {
