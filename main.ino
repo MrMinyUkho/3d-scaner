@@ -112,6 +112,14 @@ kalman fl_X;
 kalman fl_Y;
 kalman fl_Z;
 
+void drawFromProgMem( 
+                      const uint16_t *bitmap,  // адрес массива
+                      int16_t x = 0,     // начало рисования по x
+                      int16_t y = 0,     //                     y
+                      int16_t w = 160,   // ширина 
+                      int16_t h = 128    // высота картинки
+                    );
+
 //--------Прерывание-готовности-MPU6050-----
 
 void IRAM_ATTR dmpReady() {
@@ -130,7 +138,7 @@ void setup() {
   tft_disp.setRotation(tft_disp.getRotation() + 3);  // крутим дисплей
   tft_disp.fillScreen(ST7735_BLACK);                 // очистка
 
-  drawFromProgMem(&Logo);
+  drawFromProgMem(&Logo[0], 0, 0, 128, 160);
 
   tft_disp.drawRect(27, 27, 10, 10, 0x7BCF);
   tft_disp.drawRect(27, 42, 10, 10, 0x7BCF);
@@ -157,7 +165,7 @@ void setup() {
   Serial.begin(115200 * 2);
   Serial.println("z x y");
 
-  drawFromProgMem(&MainMenu);
+  drawFromProgMem(&MainMenu[0], 0, 0, 128, 160);
 }
 
 void loop() {
@@ -231,11 +239,11 @@ void drawText(char *text, uint16_t color, int x, int y) {
 }
 
 void drawFromProgMem( 
-                      uint16_t *bitmap,  // адрес массива
-                      int16_t x = 0,     // начало рисования по x
-                      int16_t y = 0,     //                     y
-                      int16_t w = 160,   // ширина 
-                      int16_t h = 128    // высота картинки
+                      const uint16_t *bitmap,  // адрес массива
+                      int16_t x,     // начало рисования по x
+                      int16_t y,     //                     y
+                      int16_t w,   // ширина 
+                      int16_t h    // высота картинки
                     ){
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
