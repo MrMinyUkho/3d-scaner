@@ -247,42 +247,43 @@ void drawFromProgMem(
 
 void getData() {
 
-  static ul tmr;
+  static ul tmr; 
 
-  //static float x_c, y_c, z_c;
   static float shX, shY, shZ;
   static float shX1, shY1, shZ1;
 
-  accX_f = mpu.getAccelerationX() / 3276.8 * 2;
-  accY_f = mpu.getAccelerationY() / 3276.8 * 2;
-  accZ_f = mpu.getAccelerationZ() / 3276.8 * 2;
+  static float x_c;
 
-  shX = shX*0.99 + x*0.01;
-  shY = shY*0.99 + y*0.01;
-  shZ = shZ*0.99 + z*0.01;
+  accX_f = mpu.getAccelerationX() / 3.2768 * 2;
+  accY_f = mpu.getAccelerationY() / 3.2768 * 2;
+  accZ_f = mpu.getAccelerationZ() / 3.2768 * 2;
 
-  shX1 = shX1*0.99 + x_vel*0.01;
-  shY1 = shY1*0.99 + y_vel*0.01;
-  shZ1 = shZ1*0.99 + z_vel*0.01;
+  float dt = (float)(tmr - esp_timer_get_time()) / 1000;
+
+  shX = shX*0.9 + x*0.1;
+  shY = shY*0.9 + y*0.1;
+  shZ = shZ*0.9 + z*0.1;
+
+  shX1 = shX1*0.9 + x_vel*0.1;
+  shY1 = shY1*0.9 + y_vel*0.1;
+  shZ1 = shZ1*0.9 + z_vel*0.1;
   
-  x = fl_X.f(accX_f - gravity.x*10);
-  y = fl_Y.f(accY_f - gravity.y*10);
-  z = fl_Z.f(accZ_f - gravity.z*10);
+  x = fl_X.f(accX_f - gravity.x*10000);
+  y = fl_Y.f(accY_f - gravity.y*10000);
+  z = fl_Z.f(accZ_f - gravity.z*10000);
 
-  x_vel += (x - shX) * (float)(tmr - esp_timer_get_time()) / 1000000;
-  y_vel += (y - shY) * (float)(tmr - esp_timer_get_time()) / 1000000;
-  z_vel += (z - shZ) * (float)(tmr - esp_timer_get_time()) / 1000000;
+  x_vel += (x - shX) * dt;
+  y_vel += (y - shY) * dt;
+  z_vel += (z - shZ) * dt;
+
+  x_c += (x_vel - shX1) * dt;
 
   tmr = esp_timer_get_time();
 
-  Serial.print(3);
+  Serial.print(x_vel - shX1);
   Serial.print(" ");
-  Serial.print(x_vel-shX1);
+  Serial.print(x-shX);
   Serial.print(" ");
-  Serial.print(y_vel-shY1);
-  Serial.print(" ");
-  Serial.print(z_vel-shZ1);
-  Serial.print(" ");
-  Serial.print(3);
+  Serial.print(x_c);
   Serial.println(" ");
 }
