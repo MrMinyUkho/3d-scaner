@@ -19,7 +19,7 @@
 #include "bitmaps.h"  // Элементы интерфейса
 #include "func.h"     // Внешние функции
 
-#include "esp_timer.h" // Таймеры ESP'ехи
+#include "esp_timer.h"  // Таймеры ESP'ехи
 
 //---------Конфиги-----------------
 
@@ -60,7 +60,7 @@ EncButton<EB_TICK, ENC_SCK, ENC_DT, ENC_SW> enc;
 
 //--------Переменные---------------
 
-uint8_t MCoord[6][2] = { // Координаты пунктов меню
+uint8_t MCoord[6][2] = {  // Координаты пунктов меню
   { 10, 26 },
   { 10, 74 },
   { 58, 26 },
@@ -105,13 +105,13 @@ kalman fl_X;
 kalman fl_Y;
 kalman fl_Z;
 
-void drawFromProgMem( 
-                      const uint16_t *bitmap,  // адрес массива
-                      int16_t x = 0,     // начало рисования по x
-                      int16_t y = 0,     //                     y
-                      int16_t w = 160,   // ширина 
-                      int16_t h = 128    // высота картинки
-                    );
+void drawFromProgMem(
+  const uint16_t *bitmap,  // адрес массива
+  int16_t x = 0,           // начало рисования по x
+  int16_t y = 0,           //                     y
+  int16_t w = 160,         // ширина
+  int16_t h = 128          // высота картинки
+);
 
 //--------Прерывание-готовности-MPU6050-----
 
@@ -122,11 +122,11 @@ void IRAM_ATTR dmpReady() {
 void setup() {
   Serial.begin(115200);
 
-  pinMode(ENC_DT, INPUT_PULLUP);    // Настройка пинов энкодера
+  pinMode(ENC_DT, INPUT_PULLUP);  // Настройка пинов энкодера
   pinMode(ENC_SW, INPUT_PULLUP);
   pinMode(ENC_SCK, INPUT_PULLUP);
 
-  enc.setEncType(EB_HALFSTEP);      // Тип энкодера
+  enc.setEncType(EB_HALFSTEP);  // Тип энкодера
 
   tft_disp.initR(INITR_BLACKTAB);                    // инициализация
   tft_disp.setRotation(tft_disp.getRotation() + 3);  // крутим дисплей
@@ -152,7 +152,7 @@ void setup() {
 
   tft_disp.fillRect(29, 29, 6, 6, !wmod ? 0xF800 : 0x07E0);
 
-  
+
   mpu.CalibrateAccel(15);
   mpu.CalibrateGyro(15);
   tft_disp.fillScreen(0);
@@ -228,17 +228,17 @@ void drawText(char *text, uint16_t color, int x, int y) {
   tft_disp.print(text);
 }
 
-void drawFromProgMem( 
-                      const uint16_t *bitmap,  // адрес массива
-                      int16_t x,     // начало рисования по x
-                      int16_t y,     //                     y
-                      int16_t w,   // ширина 
-                      int16_t h    // высота картинки
-                    ){
+void drawFromProgMem(
+  const uint16_t *bitmap,  // адрес массива
+  int16_t x,               // начало рисования по x
+  int16_t y,               //                     y
+  int16_t w,               // ширина
+  int16_t h                // высота картинки
+) {
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
       uint16_t px = pgm_read_word(bitmap + i * 160 + j);
-      if (px != 0) tft_disp.drawPixel(j+x, i+y, px);
+      if (px != 0) tft_disp.drawPixel(j + x, i + y, px);
     }
   }
 }
@@ -254,34 +254,36 @@ void getData() {
 
   static float x_c;
 
-  static float k;
+  static float kx_a = 0.01;
+  static float kx_v;
 
   accX_f = mpu.getAccelerationX() / 3276.8 * 2;
   accY_f = mpu.getAccelerationY() / 3276.8 * 2;
   accZ_f = mpu.getAccelerationZ() / 3276.8 * 2;
 
-  float dt = (float)(esp_timer_get_time() - tmr) / 1000;
+  float dt = (float)(esp_timer_get_time() - tmr) / 10;
 
-  shX = shX*(1-k) + x*k;
+  shX = shX * (1.0 - kx_a) + x * kx_a;
 
-  shX1 = shX1*0.99 + x_vel*0.01;
-  
-  x = accX_f - gravity.x*10;
+  shX1 = shX1 * (1.0 - kx_v) + x_vel * kx_v;
+
+  x = accX_f - gravity.x * 10;
 
   x_vel += (x - shX) * dt;
 
-  
+  x_c += (x_vel - shX1) * dt;
 
-  x_c += (x_vel - shX1) * dt/1000;
+  kx_v = calibrate_k(kx_v, prevX, x_vel-shX1);
 
   tmr = esp_timer_get_time();
-  prevX = x_vel-shX1;
+
+  prevX = x_vel - shX1;
   // Serial.print(x_vel - shX1);
   // Serial.print(" ");
   Serial.print(x_vel);
   Serial.print(" ");
-  Serial.print(x-shX);
+  Serial.print(k);
   Serial.print(" ");
-  Serial.print(x_vel-shX1);
+  Serial.print(x_vel - shX1);
   Serial.println(" ");
 }
