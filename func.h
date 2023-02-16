@@ -16,8 +16,8 @@ float middle_of_3(float a, float b, float c) {
 
 class kalman {
   public:
-    float varVolt = 1500;
-    float varProcess = 10;
+    float varVolt = 0.08;
+    float varProcess = 1;
     float Pc = 0.0;
     float G = 0.0;
     float P = 1.0;

@@ -152,12 +152,10 @@ void setup() {
 
   tft_disp.fillRect(29, 29, 6, 6, !wmod ? 0xF800 : 0x07E0);
 
-  delay(3000);
-
-  tft_disp.fillScreen(0);
+  
   mpu.CalibrateAccel(15);
   mpu.CalibrateGyro(15);
-  
+  tft_disp.fillScreen(0);
   Serial.println("x y z");
 
   drawFromProgMem(&MainMenu[0], 0, 0, 160, 128);
@@ -247,43 +245,43 @@ void drawFromProgMem(
 
 void getData() {
 
-  static ul tmr; 
+  static int64_t tmr;
 
-  static float shX, shY, shZ;
-  static float shX1, shY1, shZ1;
+  static float shX;
+  static float shX1;
+
+  static float prevX;
 
   static float x_c;
 
-  accX_f = mpu.getAccelerationX() / 3.2768 * 2;
-  accY_f = mpu.getAccelerationY() / 3.2768 * 2;
-  accZ_f = mpu.getAccelerationZ() / 3.2768 * 2;
+  static float k;
 
-  float dt = (float)(tmr - esp_timer_get_time()) / 1000;
+  accX_f = mpu.getAccelerationX() / 3276.8 * 2;
+  accY_f = mpu.getAccelerationY() / 3276.8 * 2;
+  accZ_f = mpu.getAccelerationZ() / 3276.8 * 2;
 
-  shX = shX*0.9 + x*0.1;
-  shY = shY*0.9 + y*0.1;
-  shZ = shZ*0.9 + z*0.1;
+  float dt = (float)(esp_timer_get_time() - tmr) / 1000;
 
-  shX1 = shX1*0.9 + x_vel*0.1;
-  shY1 = shY1*0.9 + y_vel*0.1;
-  shZ1 = shZ1*0.9 + z_vel*0.1;
+  shX = shX*(1-k) + x*k;
+
+  shX1 = shX1*0.99 + x_vel*0.01;
   
-  x = fl_X.f(accX_f - gravity.x*10000);
-  y = fl_Y.f(accY_f - gravity.y*10000);
-  z = fl_Z.f(accZ_f - gravity.z*10000);
+  x = accX_f - gravity.x*10;
 
   x_vel += (x - shX) * dt;
-  y_vel += (y - shY) * dt;
-  z_vel += (z - shZ) * dt;
 
-  x_c += (x_vel - shX1) * dt;
+  
+
+  x_c += (x_vel - shX1) * dt/1000;
 
   tmr = esp_timer_get_time();
-
-  Serial.print(x_vel - shX1);
+  prevX = x_vel-shX1;
+  // Serial.print(x_vel - shX1);
+  // Serial.print(" ");
+  Serial.print(x_vel);
   Serial.print(" ");
   Serial.print(x-shX);
   Serial.print(" ");
-  Serial.print(x_c);
+  Serial.print(x_vel-shX1);
   Serial.println(" ");
 }
